@@ -1,54 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visual Metronome</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Visual Metronome</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body style="background-color: #f4f4f4;">
-    <input type="number" id="bpm" placeholder="Enter BPM (30-300)">
-    <button id="startStop">Start</button>
+<body>
+  <header>
+    <h1 class="playful-header">
+      Visual Metr
+      <!-- Inline SVG circle sized to cap-height of the font -->
+      <svg class="circle" style="width:0.6em" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="68" r="50" />
+      </svg>
+      n
+      <svg class="circle" style="width:0.6em" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="68" r="50" />
+      </svg>
+      me
+    </h1>
+  </header>
 
-    <script>
-        const body = document.body;
-        const bpmInput = document.getElementById('bpm');
-        const startStopButton = document.getElementById('startStop');
+  <main>
+    <div class="tempo-control">
+      <label for="tempoRange">Tempo:</label>
+      <input type="range" id="tempoRange" min="40" max="240" value="120">
+      <input type="number" id="tempoInput" min="40" max="240" value="120">
+      <span class="bpm-label">BPM</span>
+    </div>
 
-        let intervalId = null;
-
-        function startMetronome() {
-            const bpm = parseInt(bpmInput.value, 10);
-            if (isNaN(bpm) || bpm < 30 || bpm > 300) {
-                alert('Please enter a BPM between 30 and 300.');
-                return;
-            }
-
-            const interval = 60000 / bpm; // Convert BPM to milliseconds
-            clearInterval(intervalId); // Clear any existing interval
-            intervalId = setInterval(() => {
-                body.style.backgroundColor = '#000'; // Flash black
-                setTimeout(() => {
-                    body.style.backgroundColor = '#f4f4f4';
-                }, 50); // Shorter flash duration
-            }, interval);
-
-            startStopButton.textContent = 'Stop';
-        }
-
-        function stopMetronome() {
-            clearInterval(intervalId);
-            intervalId = null;
-            body.style.backgroundColor = '#f4f4f4';
-            startStopButton.textContent = 'Start';
-        }
-
-        startStopButton.addEventListener('click', () => {
-            if (intervalId) {
-                stopMetronome();
-            } else {
-                startMetronome();
-            }
-        });
-    </script>
+    <div class="button-grid">
+      <button class="metro-btn">Start</button>
+      <button class="metro-btn">Stop</button>
+      <button class="metro-btn">Sound On/Off</button>
+      <button class="metro-btn">Flash On/Off</button>
+    </div>
+  </main>
 </body>
 </html>
