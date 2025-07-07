@@ -5,20 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Visual Metronome</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="script.js"></script>
 </head>
 <body>
   <header>
     <h1 class="playful-header">
-      Visual Metr
-      <!-- Inline SVG circle sized to cap-height of the font -->
-      <svg class="circle" style="width:0.6em" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="68" r="50" />
-      </svg>
-      n
-      <svg class="circle" style="width:0.6em" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="68" r="50" />
-      </svg>
-      me
+      Visual Metronome
     </h1>
   </header>
 
@@ -31,11 +23,13 @@
     </div>
 
     <div class="button-grid">
-      <button class="metro-btn">Start</button>
-      <button class="metro-btn">Stop</button>
-      <button class="metro-btn">Sound On/Off</button>
-      <button class="metro-btn">Flash On/Off</button>
+      <button id="startBtn" class="metro-btn">Start</button>
+      <button id="stopBtn" class="metro-btn">Stop</button>
+      <button id="toggleSound" class="metro-btn">Sound On</button>
+      <button id="toggleFlash" class="metro-btn">Flash On</button>
     </div>
   </main>
+  <div id="flashScreen"></div>
+
 </body>
 </html>

@@ -1,1 +1,1 @@
-readme
+To open the website: https://japark10.github.io/VisualMetronome/

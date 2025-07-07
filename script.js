@@ -1,21 +1,20 @@
+// Grab elements
+const tempoRange     = document.getElementById('tempoRange');
+const tempoInput     = document.getElementById('tempoInput');
+const startBtn       = document.getElementById('startBtn');
+const stopBtn        = document.getElementById('stopBtn');
+const toggleSoundBtn = document.getElementById('toggleSound');
+const toggleFlashBtn = document.getElementById('toggleFlash');
+const flashScreen    = document.getElementById('flashScreen');
+
+// Audio context
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-let currentInterval;
+let currentInterval = null;
 let bpm = 120;
 let soundOn = true;
 let flashOn = true;
 let flashColor = '#A8E6CF';
 let flashIntensity = 1;
-
-const tempoSlider        = document.getElementById('tempo');
-const tempoValue         = document.getElementById('tempoValue');
-const toggleSoundBtn     = document.getElementById('toggleSound');
-const toggleFlashBtn     = document.getElementById('toggleFlash');
-const flashSettingsBtn   = document.getElementById('flashSettingsBtn');
-const flashSettings      = document.getElementById('flashSettings');
-const saveSettings       = document.getElementById('saveSettings');
-const flashScreen        = document.getElementById('flashScreen');
-const flashColorInput    = document.getElementById('flashColor');
-const flashIntensityInput= document.getElementById('flashIntensity');
 
 function playClick() {
   const osc = audioCtx.createOscillator();
@@ -31,27 +30,46 @@ function playClick() {
 function flashBeat() {
   flashScreen.style.backgroundColor = flashColor;
   flashScreen.style.opacity = flashIntensity;
-  setTimeout(() => {
-    flashScreen.style.opacity = 0;
-  }, 100);
+  setTimeout(() => flashScreen.style.opacity = 0, 100);
 }
 
 function startMetronome() {
+  // Resume audio context on user gesture
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+
   clearInterval(currentInterval);
-  const interval = (60 / bpm) * 1000;
+  const intervalMs = (60 / bpm) * 1000;
   currentInterval = setInterval(() => {
     if (soundOn) playClick();
     if (flashOn) flashBeat();
-  }, interval);
+  }, intervalMs);
 }
 
-// Event listeners
-tempoSlider.addEventListener('input', e => {
-  bpm = e.target.value;
-  tempoValue.textContent = bpm;
-  startMetronome();
+function stopMetronome() {
+  clearInterval(currentInterval);
+  currentInterval = null;
+}
+
+// Sync tempo controls
+tempoRange.addEventListener('input', e => {
+  bpm = Number(e.target.value);
+  tempoInput.value = bpm;
+  if (currentInterval) startMetronome();
 });
 
+tempoInput.addEventListener('input', e => {
+  let val = Number(e.target.value);
+  if (val < 40) val = 40;
+  if (val > 240) val = 240;
+  bpm = val;
+  tempoRange.value = bpm;
+  tempoInput.value = bpm;
+  if (currentInterval) startMetronome();
+});
+
+// Button event listeners
 toggleSoundBtn.addEventListener('click', () => {
   soundOn = !soundOn;
   toggleSoundBtn.textContent = soundOn ? 'Sound On' : 'Sound Off';
@@ -64,15 +82,8 @@ toggleFlashBtn.addEventListener('click', () => {
   toggleFlashBtn.classList.toggle('active');
 });
 
-flashSettingsBtn.addEventListener('click', () => {
-  flashSettings.classList.remove('hidden');
-});
+startBtn.addEventListener('click', startMetronome);
+stopBtn.addEventListener('click', stopMetronome);
 
-saveSettings.addEventListener('click', () => {
-  flashColor = flashColorInput.value;
-  flashIntensity = flashIntensityInput.value;
-  flashSettings.classList.add('hidden');
-});
-
-// Initialize
-startMetronome();
+toggleSoundBtn.textContent = soundOn ? 'Sound On' : 'Sound Off';
+toggleFlashBtn.textContent = flashOn ? 'Flash On' : 'Flash Off';
