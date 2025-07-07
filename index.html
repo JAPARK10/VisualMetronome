@@ -1,35 +1,389 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Visual Metronome</title>
-  <link rel="stylesheet" href="styles.css">
-  <script src="script.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Advanced Visual Metronome</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+  body {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #f4e3b2; /* warm ochre */
+    margin: 0; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #3b2f2f;
+  }
+  h1 {
+    margin-bottom: 1rem;
+    font-weight: 600;
+  }
+  #light {
+    width: 180px; height: 180px;
+    background: #d1d5db;
+    border-radius: 24px;
+    margin-bottom: 2.5rem;
+    display: flex; justify-content: center; align-items: center;
+    position: relative;
+  }
+  #beat-indicator {
+    position: absolute;
+    bottom: 12px;
+    display: flex;
+    gap: 12px;
+  }
+  .beat-dot {
+    width: 18px; height: 18px;
+    background: #bbb;
+    border-radius: 50%;
+    transition: background-color 0.3s ease;
+  }
+  .beat-dot.active {
+    background: #9c4221;
+  }
+  .beat-dot.accent {
+    background: #ef4444;
+  }
+
+  #controls {
+    display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
+    width: 360px;
+  }
+  .slider-container {
+    width: 100%;
+  }
+  label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+  }
+  input[type=range] {
+    width: 100%;
+    height: 10px;
+    border-radius: 5px;
+    background: #ddd;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 22px; height: 22px;
+    background: #9c4221;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: background-color 0.3s ease;
+  }
+  input[type=range]:hover::-webkit-slider-thumb {
+    background: #7b341e;
+  }
+  #bpm-adjust {
+    margin-top: 0.8rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+  }
+  #bpm-display {
+    font-size: 1.3rem;
+    min-width: 70px;
+    text-align: center;
+    font-weight: 600;
+    color: #4a3c31;
+  }
+  button {
+    background-color: #9c4221;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    color: white;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    transition: background-color 0.3s ease;
+    user-select: none;
+  }
+  button:hover {
+    background-color: #7b341e;
+  }
+  button:focus {
+    outline: 2px solid #ef4444;
+  }
+  #start-stop {
+    width: 100%;
+    padding: 14px 0;
+    font-size: 1.1rem;
+    margin-top: 1rem;
+    letter-spacing: 1.3px;
+  }
+  #sound-select, #time-signature-select {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+  }
+  #sound-select button.active,
+  #time-signature-select button.active {
+    background-color: #ef4444;
+    box-shadow: 0 0 12px 3px #f87171;
+  }
+</style>
 </head>
 <body>
-  <header>
-    <h1 class="playful-header">
-      Visual Metronome
-    </h1>
-  </header>
+<h1>Visual Metronome</h1>
 
-  <main>
-    <div class="tempo-control">
-      <label for="tempoRange">Tempo:</label>
-      <input type="range" id="tempoRange" min="40" max="240" value="120">
-      <input type="number" id="tempoInput" min="40" max="240" value="120">
-      <span class="bpm-label">BPM</span>
+<div id="light">
+  <div id="beat-indicator"></div>
+</div>
+
+<div id="controls">
+
+  <div class="slider-container">
+    <label for="bpm">Tempo</label>
+    <input type="range" id="bpm" min="30" max="300" value="60" />
+    <div id="bpm-adjust">
+      <button onclick="changeBPM(-5)">-5 BPM</button>
+      <button onclick="changeBPM(-1)">-1 BPM</button>
+      <div id="bpm-display">60 BPM</div>
+      <button onclick="changeBPM(1)">+1 BPM</button>
+      <button onclick="changeBPM(5)">+5 BPM</button>
     </div>
+  </div>
 
-    <div class="button-grid">
-      <button id="startBtn" class="metro-btn">Start</button>
-      <button id="stopBtn" class="metro-btn">Stop</button>
-      <button id="toggleSound" class="metro-btn">Sound On</button>
-      <button id="toggleFlash" class="metro-btn">Flash On</button>
-    </div>
-  </main>
-  <div id="flashScreen"></div>
+  <div id="time-signature-select" aria-label="Time Signature">
+    <button data-beats="2" data-note="4" onclick="selectTimeSignature(this)">2/4</button>
+    <button data-beats="3" data-note="4" onclick="selectTimeSignature(this)">3/4</button>
+    <button class="active" data-beats="4" data-note="4" onclick="selectTimeSignature(this)">4/4</button>
+    <button data-beats="6" data-note="8" onclick="selectTimeSignature(this)">6/8</button>
+  </div>
 
+  <div id="sound-select" aria-label="Select Sound">
+    <button class="active" data-sound="beep" onclick="selectSound(this)">Beep</button>
+    <button data-sound="wood" onclick="selectSound(this)">Wood</button>
+    <button data-sound="metal" onclick="selectSound(this)">Laser</button>
+    <button data-sound="glass" onclick="selectSound(this)">Blopp</button>
+  </div>
+
+  <button id="start-stop" onclick="toggleMetronome()">Start</button>
+</div>
+
+<script>
+  // Audio context for scheduling precise beats
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  // UI Elements
+  const bpmSlider = document.getElementById('bpm');
+  const bpmDisplay = document.getElementById('bpm-display');
+  const light = document.getElementById('light');
+  const beatIndicator = document.getElementById('beat-indicator');
+  const startStopBtn = document.getElementById('start-stop');
+
+  let bpm = +bpmSlider.value;
+  let timerId = null;
+  let nextTickTime = 0;
+  let currentBeat = 0;
+
+  // Time signature state
+  let beatsPerBar = 4;
+  let beatNoteValue = 4; // for future expansion, currently unused
+
+  // Sound state
+  let currentSound = 'beep';
+
+  // Build beat indicator dots dynamically for max 12 beats to cover common meters
+  const maxBeats = 12;
+  for (let i = 0; i < maxBeats; i++) {
+    const dot = document.createElement('div');
+    dot.classList.add('beat-dot');
+    beatIndicator.appendChild(dot);
+  }
+
+  const beatDots = Array.from(beatIndicator.children);
+
+  // Update BPM UI
+  function updateDisplay() {
+    bpm = +bpmSlider.value;
+    bpmDisplay.textContent = bpm + " BPM";
+  }
+
+  bpmSlider.addEventListener('input', () => {
+    updateDisplay();
+  });
+
+  function changeBPM(delta) {
+    let newVal = bpm + delta;
+    newVal = Math.max(30, Math.min(300, newVal));
+    bpmSlider.value = newVal;
+    updateDisplay();
+  }
+
+  // Time signature selection UI logic
+  function selectTimeSignature(button) {
+    document.querySelectorAll('#time-signature-select button').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+    beatsPerBar = +button.dataset.beats;
+    beatNoteValue = +button.dataset.note;
+
+    // Update beat dots display: show only the number of beats in bar
+    beatDots.forEach((dot, i) => {
+      dot.style.display = i < beatsPerBar ? 'inline-block' : 'none';
+      dot.classList.remove('active', 'accent');
+    });
+
+    currentBeat = 0; // Reset beat counter on change
+  }
+
+  // Sound selection UI logic
+  function selectSound(button) {
+    document.querySelectorAll('#sound-select button').forEach(btn => btn.classList.remove('active'));
+    button.classList.add('active');
+    currentSound = button.dataset.sound;
+  }
+
+  // Play different sounds according to selected sound and if accent beat
+  function playClick(accent = false) {
+    const now = audioCtx.currentTime;
+
+    if (currentSound === 'beep') {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "square";
+      osc.frequency.setValueAtTime(accent ? 1400 : 1000, now);
+      gain.gain.setValueAtTime(1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.12);
+
+    } else if (currentSound === 'wood') {
+      // simple wooden click by short noise burst filtered low
+      const bufferSize = audioCtx.sampleRate * 0.05;
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for(let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize/8));
+      }
+      const noise = audioCtx.createBufferSource();
+      noise.buffer = buffer;
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(800, now);
+      noise.connect(filter).connect(audioCtx.destination);
+      noise.start(now);
+      noise.stop(now + 0.07);
+
+    } else if (currentSound === 'metal') {
+      // metallic click with short frequency sweep
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "triangle";
+      osc.frequency.setValueAtTime(accent ? 2000 : 1700, now);
+      osc.frequency.exponentialRampToValueAtTime(accent ? 3500 : 3000, now + 0.07);
+      gain.gain.setValueAtTime(1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.12);
+
+    } else if (currentSound === 'glass') {
+      // glass bell style click using sine with quick fade out
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(accent ? 900 : 750, now);
+      gain.gain.setValueAtTime(1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.16);
+    }
+  }
+
+  // Flashlight effect: accent beats flash bigger + red, others flash normal ochre glow
+  function flashLight(accent = false) {
+    if (accent) {
+      light.style.backgroundColor = '#ef4444';
+      light.style.transform = 'scale(1)';
+    } else {
+      light.style.backgroundColor = '#a6532d';
+      light.style.transform = 'scale(1)';
+    }
+    setTimeout(() => {
+      light.style.backgroundColor = '#d1d5db';
+      light.style.transform = 'scale(1)';
+    }, 120);
+  }
+
+  // Beat animation on dots
+  function animateBeat(beatIndex, accent) {
+    beatDots.forEach(dot => dot.classList.remove('active', 'accent'));
+    if (beatDots[beatIndex]) {
+      beatDots[beatIndex].classList.add(accent ? 'accent' : 'active');
+    }
+  }
+
+  // Scheduler for accurate timing
+  let isRunning = false;
+  let schedulerTimer;
+  let lookahead = 25.0; // How frequently to call scheduling function (ms)
+  let scheduleAheadTime = 0.1; // How far ahead to schedule audio (sec)
+
+  let nextNoteTime = 0.0; // when the next note is due
+  let current16thNote = 0;
+
+  function nextNote() {
+    // 60sec / bpm = quarter note duration in sec
+    let secondsPerBeat = 60.0 / bpm;
+    nextNoteTime += secondsPerBeat;
+    currentBeat = (currentBeat + 1) % beatsPerBar;
+  }
+
+  function scheduler() {
+    while (nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
+      let accent = (currentBeat === 0);
+      playClick(accent);
+      flashLight(accent);
+      animateBeat(currentBeat, accent);
+      nextNote();
+    }
+    schedulerTimer = setTimeout(scheduler, lookahead);
+  }
+
+  function startMetronome() {
+    if (audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    currentBeat = 0;
+    nextNoteTime = audioCtx.currentTime + 0.05;
+    scheduler();
+    isRunning = true;
+    startStopBtn.textContent = 'Stop';
+  }
+
+  function stopMetronome() {
+    clearTimeout(schedulerTimer);
+    isRunning = false;
+    startStopBtn.textContent = 'Start';
+    animateBeat(-1); // clear highlights
+    light.style.backgroundColor = '#d1d5db';
+    light.style.boxShadow = '0 6px 20px rgba(0,0,0,0.15)';
+    light.style.transform = 'scale(1)';
+  }
+
+  function toggleMetronome() {
+    if (isRunning) {
+      stopMetronome();
+    } else {
+      startMetronome();
+    }
+  }
+
+  // Initialize
+  updateDisplay();
+  selectTimeSignature(document.querySelector('#time-signature-select button.active'));
+  selectSound(document.querySelector('#sound-select button.active'));
+
+</script>
 </body>
 </html>
