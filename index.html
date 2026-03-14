@@ -1,363 +1,728 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Advanced Visual Metronome</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
-  body {
-    font-family: 'Montserrat', sans-serif;
-    background-color: #f4e3b2;
-    margin: 0; min-height: 100vh;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-    color: #3b2f2f;
-  }
-  h1 {
-    margin-bottom: 1rem;
-    font-weight: 600;
-  }
-  #light {
-    width: 180px; height: 180px;
-    background: #d1d5db;
-    border-radius: 24px;
-    margin-bottom: 2.5rem;
-    display: flex; justify-content: center; align-items: center;
-    position: relative;
-  }
-  #beat-indicator {
-    position: absolute;
-    bottom: 12px;
-    display: flex;
-    gap: 12px;
-  }
-  .beat-dot {
-    width: 18px; height: 18px;
-    background: #bbb;
-    border-radius: 50%;
-    transition: background-color 0.3s ease;
-  }
-  .beat-dot.active {
-    background: #9c4221;
-  }
-  .beat-dot.accent {
-    background: #ef4444;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>V-METRO | Pro Dashboard</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030305;
+      --panel: rgba(15, 15, 20, 0.9);
+      --accent: #00f2ff;
+      --accent-glow: rgba(0, 242, 255, 0.4);
+      --accent-secondary: #ff007a;
+      --text: #ffffff;
+      --text-dim: #666677;
+      --border: rgba(255, 255, 255, 0.08);
+      --glass: rgba(255, 255, 255, 0.02);
+    }
 
-  #controls {
-    display: flex; flex-direction: column; align-items: center; gap: 1.5rem;
-    width: 360px;
-  }
-  .slider-container {
-    width: 100%;
-  }
-  label {
-    font-weight: 600;
-    display: block;
-    margin-bottom: 0.5rem;
-    font-size: 1.1rem;
-  }
-  input[type=range] {
-    width: 100%;
-    height: 10px;
-    border-radius: 5px;
-    background: #ddd;
-    outline: none;
-    -webkit-appearance: none;
-  }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 22px; height: 22px;
-    background: #9c4221;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    transition: background-color 0.3s ease;
-  }
-  input[type=range]:hover::-webkit-slider-thumb {
-    background: #7b341e;
-  }
-  #bpm-adjust {
-    margin-top: 0.8rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-  }
-  #bpm-display {
-    font-size: 1.3rem;
-    min-width: 70px;
-    text-align: center;
-    font-weight: 600;
-    color: #4a3c31;
-  }
-  button {
-    background-color: #9c4221;
-    border: none;
-    border-radius: 6px;
-    padding: 8px 14px;
-    color: white;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.9rem;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    transition: background-color 0.3s ease;
-    user-select: none;
-  }
-  button:hover {
-    background-color: #7b341e;
-  }
-  button:focus {
-    outline: 2px solid #ef4444;
-  }
-  #start-stop {
-    width: 100%;
-    padding: 14px 0;
-    font-size: 1.1rem;
-    margin-top: 1rem;
-    letter-spacing: 1.3px;
-  }
-  #sound-select, #time-signature-select {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-  }
-  #sound-select button.active,
-  #time-signature-select button.active {
-    background-color: #ef4444;
-    box-shadow: 0 0 12px 3px #f87171;
-  }
-</style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* Instant Flash Layer */
+    #flash-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0;
+      /* No transition */
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 280px 1fr 280px;
+      grid-template-rows: auto 1fr auto;
+      gap: 1.5rem;
+      width: 95vw;
+      height: 90vh;
+      max-width: 1400px;
+      z-index: 10;
+    }
+
+    header {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      font-weight: 700;
+      font-size: 1.8rem;
+      letter-spacing: 2px;
+      margin: 0;
+      text-transform: uppercase;
+    }
+
+    .status-bar {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+      opacity: 0.8;
+    }
+
+    /* Horizontal Sections */
+    .side-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .main-stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Component Styling */
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      backdrop-filter: blur(20px);
+    }
+
+    .label-group {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      font-weight: 700;
+    }
+
+    /* Main Visualizer - Larger for Dashboard */
+    #main-visualizer {
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 0 100px rgba(0, 0, 0, 0.5);
+    }
+
+    .tempo-display {
+      text-align: center;
+      z-index: 5;
+    }
+
+    #bpm-value {
+      font-size: 8rem;
+      font-weight: 700;
+      line-height: 0.9;
+      cursor: pointer;
+    }
+
+    .bpm-unit {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 5px;
+      color: var(--text-dim);
+    }
+
+    /* Controls */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 2px;
+      background: var(--border);
+      border-radius: 1px;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 50%;
+      cursor: pointer;
+      border: 4px solid var(--bg);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .btn-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    button {
+      background: var(--glass);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--text-dim);
+    }
+
+    button.active {
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      font-weight: 700;
+    }
+
+    /* Footer Section */
+    .footer {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 2rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .presets {
+      display: flex;
+      gap: 10px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    #toggle-btn {
+      flex: 2;
+      background: var(--accent);
+      color: var(--bg);
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 2px;
+      border: none;
+    }
+
+    #tap-btn {
+      flex: 1;
+      background: var(--accent-secondary);
+      color: var(--text);
+      border: none;
+      font-weight: 700;
+    }
+
+    /* Focus Animation */
+    body.engine-running .side-panel,
+    body.engine-running header {
+      opacity: 0.2;
+      filter: blur(4px);
+      transition: all 0.8s ease;
+    }
+
+    body.engine-running:hover .side-panel,
+    body.engine-running:hover header {
+      opacity: 1;
+      filter: blur(0);
+    }
+
+    /* Beat Indicators Dashboard Mode */
+    #beat-track {
+      position: absolute;
+      bottom: 20px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .track-dot {
+      width: 24px;
+      height: 12px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: var(--glass);
+    }
+
+    .track-dot.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      box-shadow: 0 0 15px var(--accent);
+      transform: scale(1.1);
+    }
+
+    .track-dot.accent {
+      background: var(--accent-secondary);
+      border-color: var(--accent-secondary);
+      box-shadow: 0 0 20px var(--accent-secondary);
+      transform: scale(1.2);
+    }
+
+    .track-dot.muted {
+      opacity: 0.2;
+    }
+
+    /* New Module Sections */
+    .v-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .h-stack {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    /* Mini Displays */
+    .mini-label {
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .mini-val {
+      font-family: 'JetBrains Mono';
+      font-size: 0.9rem;
+      color: var(--accent);
+    }
+  </style>
 </head>
+
 <body>
-<h1>Visual Metronome</h1>
 
-<div id="light">
-  <div id="beat-indicator"></div>
-</div>
+  <div id="flash-layer"></div>
 
-<div id="controls">
+  <div class="dashboard">
+    <header>
+      <h1>V-METRO <span style="font-weight: 300; opacity: 0.5;">ULTIMATE</span></h1>
+      <div class="status-bar">Engine Status: [ STANDBY ]</div>
+    </header>
 
-  <div class="slider-container">
-    <label for="bpm">Tempo</label>
-    <input type="range" id="bpm" min="30" max="300" value="60" />
-    <div id="bpm-adjust">
-      <button onclick="changeBPM(-5)">-5 BPM</button>
-      <button onclick="changeBPM(-1)">-1 BPM</button>
-      <div id="bpm-display">60 BPM</div>
-      <button onclick="changeBPM(1)">+1 BPM</button>
-      <button onclick="changeBPM(5)">+5 BPM</button>
-    </div>
+    <aside class="side-panel">
+      <div class="card">
+        <label>Tempo Trainer</label>
+        <div class="v-stack" style="margin-top: 10px;">
+          <div class="label-group">
+            <span class="mini-label">Increment</span>
+            <span class="mini-val" id="trainer-inc-val">+1 BPM</span>
+          </div>
+          <input type="range" id="trainer-inc" min="0" max="10" value="0" />
+          <div class="label-group">
+            <span class="mini-label">Every X Bars</span>
+            <span class="mini-val" id="trainer-bars-val">4 Bars</span>
+          </div>
+          <input type="range" id="trainer-bars" min="1" max="16" value="4" />
+          <span style="font-size: 0.5rem; color: var(--text-dim);">Increases BPM automatically over time for speed
+            practice.</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <label>Loop Station</label>
+        <div class="v-stack" style="margin-top: 10px;">
+          <div class="h-stack">
+            <button id="record-btn" style="flex: 1;">REC</button>
+            <button id="clear-loop-btn" style="flex: 1;">CLR</button>
+          </div>
+          <div class="status-bar" id="loop-status" style="font-size: 0.6rem;">Status: Empty</div>
+          <span style="font-size: 0.5rem; color: var(--text-dim);">Hit REC and tap a rhythm (Space/Button) to loop
+            it.</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <label>Rhythmic Subdivision</label>
+        <div class="btn-grid" id="subdivision-select" style="margin-top: 10px;">
+          <button class="active" data-sub="1">1/4</button>
+          <button data-sub="2">1/8</button>
+          <button data-sub="4">1/16</button>
+          <button data-sub="3">Trp</button>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-stage">
+      <div id="main-visualizer">
+        <div class="tempo-display">
+          <div id="bpm-value">120</div>
+          <div class="bpm-unit">Beats Per Minute</div>
+        </div>
+      </div>
+      <div id="beat-track"></div>
+      <div style="margin-top: 20px; font-size: 0.7rem; color: var(--text-dim);">Click dots to toggle: Accent → Normal →
+        Mute</div>
+    </main>
+
+    <aside class="side-panel">
+      <div class="card">
+        <label>Reference Tuner</label>
+        <div class="v-stack" style="margin-top: 10px;">
+          <div class="h-stack">
+            <button id="tune-440">A 440</button>
+            <button id="tune-442">A 442</button>
+            <button id="tune-stop">OFF</button>
+          </div>
+          <span style="font-size: 0.5rem; color: var(--text-dim);">Stable pitch generator for tuning your instrument by
+            ear.</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <label>Time Signature</label>
+        <div class="btn-grid" id="sig-select" style="margin-top: 10px;">
+          <button data-beats="2">2/4</button><button data-beats="3">3/4</button>
+          <button data-beats="4" class="active">4/4</button><button data-beats="5">5/4</button>
+          <button data-beats="6">6/8</button><button data-beats="7">7/8</button>
+        </div>
+      </div>
+
+      <div class="card" style="flex: 1;">
+        <label>Sound Profile</label>
+        <div class="btn-grid" id="sound-select" style="margin-top: 10px;">
+          <button class="active" data-sound="chip">CHIP</button>
+          <button data-sound="wood">WOOD</button>
+          <button data-sound="beam">BEAM</button>
+          <button data-sound="snap">SNAP</button>
+        </div>
+        <div style="margin-top: 15px;">
+          <button id="flash-toggle" class="active" style="width: 100%;">Flash: ON</button>
+        </div>
+      </div>
+    </aside>
+
+    <footer class="footer">
+      <div class="presets">
+        <button id="audio-toggle" class="active">Audio: ON</button>
+        <div style="width: 1px; background: var(--border); margin: 0 10px;"></div>
+        <button onclick="adjustBPM(-5)">-5</button><button onclick="adjustBPM(5)">+5</button>
+      </div>
+      <div class="actions">
+        <button id="toggle-btn">Start Master Engine</button>
+        <div class="v-stack">
+          <button id="tap-btn">Tap Tempo</button>
+          <span style="font-size: 0.5rem; color: var(--text-dim); text-align: center;">Tap twice to set BPM</span>
+        </div>
+      </div>
+    </footer>
   </div>
 
-  <div id="time-signature-select" aria-label="Time Signature">
-    <button data-beats="2" data-note="4" onclick="selectTimeSignature(this)">2/4</button>
-    <button data-beats="3" data-note="4" onclick="selectTimeSignature(this)">3/4</button>
-    <button class="active" data-beats="4" data-note="4" onclick="selectTimeSignature(this)">4/4</button>
-    <button data-beats="6" data-note="8" onclick="selectTimeSignature(this)">6/8</button>
-  </div>
+  <script>
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioCtx();
 
-  <div id="sound-select" aria-label="Select Sound">
-    <button class="active" data-sound="beep" onclick="selectSound(this)">Beep</button>
-    <button data-sound="wood" onclick="selectSound(this)">Wood</button>
-    <button data-sound="metal" onclick="selectSound(this)">Laser</button>
-    <button data-sound="glass" onclick="selectSound(this)">Blopp</button>
-  </div>
+    // State
+    let isRunning = false;
+    let bpm = 120;
+    let beatsPerBar = 4;
+    let subdivision = 1;
+    let currentTick = 0;
+    let currentBeat = 0;
+    let nextNoteTime = 0.0;
+    let audioOn = true;
+    let flashOn = true;
+    let currentSound = 'chip';
 
-  <button id="start-stop" onclick="toggleMetronome()">Start</button>
-</div>
+    // Trainer State
+    let trainerInc = 0;
+    let trainerBars = 4;
+    let barCounter = 0;
 
-<script>
-  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    // Accents State (0: normal, 1: accent, 2: mute)
+    let beatStates = [1, 0, 0, 0];
 
-  const bpmSlider = document.getElementById('bpm');
-  const bpmDisplay = document.getElementById('bpm-display');
-  const light = document.getElementById('light');
-  const beatIndicator = document.getElementById('beat-indicator');
-  const startStopBtn = document.getElementById('start-stop');
+    // Tuner State
+    let tunerOsc = null;
 
-  let bpm = +bpmSlider.value;
-  let timerId = null;
-  let nextTickTime = 0;
-  let currentBeat = 0;
+    // Loop Station State
+    let isRecording = false;
+    let loopPattern = []; // Array of { offset: ms, type: 'tap' } relative to measure start
+    let measureStartTimeRef = 0;
 
-  let beatsPerBar = 4;
-  let beatNoteValue = 4; 
-  let currentSound = 'beep';
+    // UI Components
+    const bpmValue = document.getElementById('bpm-value');
+    const toggleBtn = document.getElementById('toggle-btn');
+    const flashLayer = document.getElementById('flash-layer');
+    const beatTrack = document.getElementById('beat-track');
+    const statusLine = document.querySelector('.status-bar');
+    const loopStatus = document.getElementById('loop-status');
 
-  const maxBeats = 12;
-  for (let i = 0; i < maxBeats; i++) {
-    const dot = document.createElement('div');
-    dot.classList.add('beat-dot');
-    beatIndicator.appendChild(dot);
-  }
-
-  const beatDots = Array.from(beatIndicator.children);
-  function updateDisplay() {
-    bpm = +bpmSlider.value;
-    bpmDisplay.textContent = bpm + " BPM";
-  }
-  bpmSlider.addEventListener('input', () => {
-    updateDisplay();
-  });
-  function changeBPM(delta) {
-    let newVal = bpm + delta;
-    newVal = Math.max(30, Math.min(300, newVal));
-    bpmSlider.value = newVal;
-    updateDisplay();
-  }
-
-
-  function selectTimeSignature(button) {
-    document.querySelectorAll('#time-signature-select button').forEach(btn => btn.classList.remove('active'));
-    button.classList.add('active');
-    beatsPerBar = +button.dataset.beats;
-    beatNoteValue = +button.dataset.note;
-
-
-    beatDots.forEach((dot, i) => {
-      dot.style.display = i < beatsPerBar ? 'inline-block' : 'none';
-      dot.classList.remove('active', 'accent');
-    });
-
-    currentBeat = 0;
-  }
-  function selectSound(button) {
-    document.querySelectorAll('#sound-select button').forEach(btn => btn.classList.remove('active'));
-    button.classList.add('active');
-    currentSound = button.dataset.sound;
-  }
-  function playClick(accent = false) {
-    const now = audioCtx.currentTime;
-    if (currentSound === 'beep') {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "square";
-      osc.frequency.setValueAtTime(accent ? 1400 : 1000, now);
-      gain.gain.setValueAtTime(1, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start(now);
-      osc.stop(now + 0.12);
-    } else if (currentSound === 'wood') {
-      const bufferSize = audioCtx.sampleRate * 0.05;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for(let i = 0; i < bufferSize; i++) {
-        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize/8));
+    function initTrack() {
+      beatTrack.innerHTML = '';
+      // If sig changed, reset beatStates
+      if (beatStates.length !== beatsPerBar) {
+        beatStates = Array(beatsPerBar).fill(0);
+        beatStates[0] = 1; // Default first beat accent
       }
+
+      for (let i = 0; i < beatsPerBar; i++) {
+        const d = document.createElement('div');
+        d.className = 'track-dot';
+        if (beatStates[i] === 1) d.classList.add('accent');
+        if (beatStates[i] === 2) d.classList.add('muted');
+
+        d.onclick = () => {
+          beatStates[i] = (beatStates[i] + 1) % 3;
+          initTrack();
+        };
+        beatTrack.appendChild(d);
+      }
+    }
+
+    function playClick(time, type, isSub) {
+      if (!audioOn || type === 2) return; // Muted
+      const g = audioCtx.createGain();
+      const osc = audioCtx.createOscillator();
       const noise = audioCtx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.setValueAtTime(800, now);
-      noise.connect(filter).connect(audioCtx.destination);
-      noise.start(now);
-      noise.stop(now + 0.07);
-    } else if (currentSound === 'metal') {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "triangle";
-      osc.frequency.setValueAtTime(accent ? 2000 : 1700, now);
-      osc.frequency.exponentialRampToValueAtTime(accent ? 3500 : 3000, now + 0.07);
-      gain.gain.setValueAtTime(1, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start(now);
-      osc.stop(now + 0.12);
 
-    } else if (currentSound === 'glass') {
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(accent ? 900 : 750, now);
-      gain.gain.setValueAtTime(1, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-      osc.connect(gain).connect(audioCtx.destination);
-      osc.start(now);
-      osc.stop(now + 0.16);
+      const isAccent = (type === 1);
+      const volume = isAccent ? 0.35 : (isSub ? 0.08 : 0.2);
+      g.gain.setValueAtTime(volume, time);
+      g.gain.exponentialRampToValueAtTime(0.001, time + (isSub ? 0.03 : 0.08));
+
+      if (currentSound === 'chip') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(isAccent ? 1200 : (isSub ? 600 : 800), time);
+        osc.connect(g).connect(audioCtx.destination);
+        osc.start(time); osc.stop(time + 0.1);
+      }
+      else if (currentSound === 'wood') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(isAccent ? 800 : (isSub ? 400 : 600), time);
+        osc.frequency.exponentialRampToValueAtTime(100, time + 0.05);
+        const bufSize = audioCtx.sampleRate * 0.02;
+        const buffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufSize / 3));
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'lowpass'; filter.frequency.value = 1500;
+        noise.connect(filter).connect(g);
+        osc.connect(g).connect(audioCtx.destination);
+        noise.start(time); osc.start(time); osc.stop(time + 0.1);
+      }
+      else if (currentSound === 'beam') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(isAccent ? 3000 : (isSub ? 1500 : 2000), time);
+        osc.frequency.exponentialRampToValueAtTime(isAccent ? 500 : 300, time + 0.04);
+        osc.connect(g).connect(audioCtx.destination);
+        osc.start(time); osc.stop(time + 0.05);
+      }
+      else if (currentSound === 'snap') {
+        const bufSize = audioCtx.sampleRate * 0.05;
+        const buffer = audioCtx.createBuffer(1, bufSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = (Math.random() * 2 - 1);
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'highpass'; filter.frequency.value = 2000;
+        noise.connect(filter).connect(g).connect(audioCtx.destination);
+        noise.start(time); noise.stop(time + 0.05);
+      }
     }
-  }
-  function flashLight(accent = false) {
-    if (accent) {
-      light.style.backgroundColor = '#ef4444';
-      light.style.transform = 'scale(1)';
-    } else {
-      light.style.backgroundColor = '#a6532d';
-      light.style.transform = 'scale(1)';
+
+    function scheduler() {
+      while (nextNoteTime < audioCtx.currentTime + 0.1) {
+        if (currentTick % subdivision === 0) {
+          // Measure start reference
+          if (currentBeat === 0) measureStartTimeRef = nextNoteTime;
+
+          // Loop Station Playback logic
+          loopPattern.forEach(note => {
+            // Play loop note relative to measure start
+            playClick(measureStartTimeRef + (note.offset / 1000), 0, true);
+          });
+        }
+
+        const isSub = (currentTick % subdivision !== 0);
+        const beatType = isSub ? 0 : beatStates[currentBeat];
+        scheduleNote(currentBeat, nextNoteTime, isSub, beatType);
+
+        const secondsPerTick = 60.0 / bpm / subdivision;
+        nextNoteTime += secondsPerTick;
+
+        currentTick++;
+        if (currentTick % subdivision === 0) {
+          currentBeat = (currentBeat + 1) % beatsPerBar;
+          if (currentBeat === 0) {
+            barCounter++;
+            if (trainerInc > 0 && barCounter >= trainerBars) {
+              barCounter = 0;
+              bpm = Math.min(300, bpm + trainerInc);
+              bpmValue.textContent = bpm;
+            }
+          }
+        }
+      }
+      if (isRunning) setTimeout(scheduler, 25);
     }
-    setTimeout(() => {
-      light.style.backgroundColor = '#d1d5db';
-      light.style.transform = 'scale(1)';
-    }, 120);
-  }
-  function animateBeat(beatIndex, accent) {
-    beatDots.forEach(dot => dot.classList.remove('active', 'accent'));
-    if (beatDots[beatIndex]) {
-      beatDots[beatIndex].classList.add(accent ? 'accent' : 'active');
+
+    function scheduleNote(beat, time, isSub, type) {
+      playClick(time, type, isSub);
+
+      const delay = (time - audioCtx.currentTime) * 1000;
+      setTimeout(() => {
+        if (!isRunning) return;
+
+        if (flashOn && !isSub && type !== 2) {
+          flashLayer.style.backgroundColor = (type === 1) ? 'var(--accent-secondary)' : 'var(--accent)';
+          flashLayer.style.opacity = (type === 1) ? '0.25' : '0.12';
+          requestAnimationFrame(() => { setTimeout(() => flashLayer.style.opacity = '0', 15); });
+        }
+
+        if (!isSub) {
+          const visualizer = document.getElementById('main-visualizer');
+          visualizer.style.borderColor = (type === 1) ? 'var(--accent-secondary)' : 'var(--accent)';
+          visualizer.style.boxShadow = (type === 1) ? '0 0 100px rgba(255,0,122,0.4)' : `0 0 50px ${type === 2 ? 'transparent' : 'var(--accent-glow)'}`;
+          setTimeout(() => { visualizer.style.borderColor = 'var(--border)'; visualizer.style.boxShadow = 'none'; }, 40);
+
+          const dots = beatTrack.children;
+          for (let i = 0; i < dots.length; i++) {
+            dots[i].classList.remove('active');
+            if (i === beat) dots[i].classList.add('active');
+          }
+        }
+      }, delay);
     }
-  }
 
-  let isRunning = false;
-  let schedulerTimer;
-  let lookahead = 25.0; 
-  let scheduleAheadTime = 0.1; 
-
-  let nextNoteTime = 0.0; 
-  let current16thNote = 0;
-
-  function nextNote() {
-    let secondsPerBeat = 60.0 / bpm;
-    nextNoteTime += secondsPerBeat;
-    currentBeat = (currentBeat + 1) % beatsPerBar;
-  }
-
-  function scheduler() {
-    while (nextNoteTime < audioCtx.currentTime + scheduleAheadTime) {
-      let accent = (currentBeat === 0);
-      playClick(accent);
-      flashLight(accent);
-      animateBeat(currentBeat, accent);
-      nextNote();
+    function toggle() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      isRunning = !isRunning;
+      document.body.classList.toggle('engine-running', isRunning);
+      statusLine.textContent = isRunning ? 'Engine Status: [ RUNNING ]' : 'Engine Status: [ STANDBY ]';
+      if (isRunning) {
+        currentTick = 0; currentBeat = 0; barCounter = 0;
+        nextNoteTime = audioCtx.currentTime + 0.05;
+        toggleBtn.textContent = 'Stop Engine';
+        scheduler();
+      } else {
+        toggleBtn.textContent = 'Start Master Engine';
+        flashLayer.style.opacity = '0';
+      }
     }
-    schedulerTimer = setTimeout(scheduler, lookahead);
-  }
 
-  function startMetronome() {
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
+    // Toggles & Inputs
+    document.getElementById('audio-toggle').onclick = (e) => { audioOn = !audioOn; e.target.classList.toggle('active', audioOn); e.target.textContent = `Audio: ${audioOn ? 'ON' : 'OFF'}`; };
+    document.getElementById('flash-toggle').onclick = (e) => { flashOn = !flashOn; e.target.classList.toggle('active', flashOn); e.target.textContent = `Flash: ${flashOn ? 'ON' : 'OFF'}`; };
+
+    document.getElementById('trainer-inc').oninput = (e) => { trainerInc = +e.target.value; document.getElementById('trainer-inc-val').textContent = `+${trainerInc} BPM`; };
+    document.getElementById('trainer-bars').oninput = (e) => { trainerBars = +e.target.value; document.getElementById('trainer-bars-val').textContent = `${trainerBars} Bars`; };
+
+    function adjustBPM(d) { bpm = Math.max(30, Math.min(300, bpm + d)); bpmValue.textContent = bpm; }
+
+    document.getElementById('sig-select').onclick = (e) => {
+      if (e.target.tagName === 'BUTTON') {
+        document.querySelectorAll('#sig-select button').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        beatsPerBar = +e.target.dataset.beats;
+        initTrack(); currentBeat = 0; currentTick = 0;
+      }
+    };
+
+    document.getElementById('subdivision-select').onclick = (e) => {
+      if (e.target.tagName === 'BUTTON') {
+        document.querySelectorAll('#subdivision-select button').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        subdivision = +e.target.dataset.sub;
+        currentTick = 0; currentBeat = 0;
+      }
+    };
+
+    document.getElementById('sound-select').onclick = (e) => {
+      if (e.target.tagName === 'BUTTON') {
+        document.querySelectorAll('#sound-select button').forEach(b => b.classList.remove('active'));
+        e.target.classList.add('active');
+        currentSound = e.target.dataset.sound;
+      }
+    };
+
+    // Reference Tuner
+    function startTuner(freq) {
+      stopTuner();
+      tunerOsc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      tunerOsc.type = 'sine'; tunerOsc.frequency.value = freq;
+      g.gain.value = 0.1; tunerOsc.connect(g).connect(audioCtx.destination);
+      tunerOsc.start();
     }
-    currentBeat = 0;
-    nextNoteTime = audioCtx.currentTime + 0.05;
-    scheduler();
-    isRunning = true;
-    startStopBtn.textContent = 'Stop';
-  }
+    function stopTuner() { if (tunerOsc) { tunerOsc.stop(); tunerOsc = null; } }
+    document.getElementById('tune-440').onclick = () => startTuner(440);
+    document.getElementById('tune-442').onclick = () => startTuner(442);
+    document.getElementById('tune-stop').onclick = stopTuner;
 
-  function stopMetronome() {
-    clearTimeout(schedulerTimer);
-    isRunning = false;
-    startStopBtn.textContent = 'Start';
-    animateBeat(-1);
-    light.style.backgroundColor = '#d1d5db';
-    light.style.boxShadow = '0 6px 20px rgba(0,0,0,0.15)';
-    light.style.transform = 'scale(1)';
-  }
+    // Loop Station Logic
+    const recordBtn = document.getElementById('record-btn');
 
-  function toggleMetronome() {
-    if (isRunning) {
-      stopMetronome();
-    } else {
-      startMetronome();
+    recordBtn.onclick = () => {
+      isRecording = !isRecording;
+      recordBtn.classList.toggle('active', isRecording);
+      recordBtn.textContent = isRecording ? 'STOP REC' : 'REC';
+      loopStatus.textContent = isRecording ? 'Status: Recording...' : (loopPattern.length ? 'Status: Loaded' : 'Status: Empty');
+      if (isRecording && loopPattern.length === 0) measureStartTimeRef = audioCtx.currentTime;
+    };
+
+    document.getElementById('clear-loop-btn').onclick = () => { loopPattern = []; loopStatus.textContent = 'Status: Empty'; };
+
+    function captureLoopEvent() {
+      if (!isRecording || !isRunning) return;
+      const offset = (audioCtx.currentTime - measureStartTimeRef) * 1000;
+      const measureDuration = (60000 / bpm) * beatsPerBar;
+      loopPattern.push({ offset: offset % measureDuration });
     }
-  }
 
-  // Initialize
-  updateDisplay();
-  selectTimeSignature(document.querySelector('#time-signature-select button.active'));
-  selectSound(document.querySelector('#sound-select button.active'));
+    toggleBtn.onclick = toggle;
 
-</script>
+    // Tap Tempo
+    let taps = [];
+    document.getElementById('tap-btn').onclick = () => {
+      const now = performance.now();
+      if (taps.length > 0 && now - taps[taps.length - 1] > 2000) taps = [];
+      taps.push(now); if (taps.length > 2) taps.shift();
+      if (taps.length === 2) {
+        const interval = taps[1] - taps[0];
+        bpm = Math.round(60000 / interval);
+        adjustBPM(0);
+      }
+    };
+
+    window.onkeydown = (e) => {
+      if (e.code === 'Space') { e.preventDefault(); if (isRecording) captureLoopEvent(); else toggle(); }
+      if (e.code === 'KeyT') document.getElementById('tap-btn').click();
+    };
+
+    initTrack();
+  </script>
 </body>
+
 </html>

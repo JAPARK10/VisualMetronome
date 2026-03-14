@@ -1,0 +1,20 @@
+:root {
+  /* Colors */
+  --bg-color: #0d0d12;
+  --surface-color: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --accent-primary: #00f2ff;
+  --accent-secondary: #7000ff;
+  --accent-accent: #ff007a;
+  --text-main: #ffffff;
+  --text-muted: #a0a0ab;
+  
+  /* Shadows & Glows */
+  --glow-primary: 0 0 20px rgba(0, 242, 255, 0.3);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+  
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.03);
+  --glass-blur: blur(12px);
+  --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+}
